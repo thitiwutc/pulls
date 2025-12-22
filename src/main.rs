@@ -1,4 +1,8 @@
-use std::{fs, io::stdout, process::Command};
+use std::{
+    fs,
+    io::stdout,
+    process::{Command, Stdio},
+};
 
 use clap::Parser;
 
@@ -47,6 +51,7 @@ fn main() {
 
         let g_co_status = Command::new("git")
             .args(["checkout", &repo.branch])
+            .stdout(Stdio::null())
             .current_dir(&repo.dir)
             .status()
             .unwrap();
@@ -62,6 +67,7 @@ fn main() {
 
         let g_pl_status = Command::new("git")
             .arg("pull")
+            .stdout(Stdio::null())
             .current_dir(&repo.dir)
             .status()
             .unwrap();
