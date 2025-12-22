@@ -1,8 +1,8 @@
-use std::{fs, io::stdout};
+use std::{fs, io::stdout, process::Command};
 
 use clap::Parser;
 
-use crate::config::Config;
+use crate::config::{Config, RepositoryConfig};
 
 mod config;
 
@@ -30,4 +30,69 @@ fn main() {
 
     let cfg = serde_yaml::from_slice::<config::Config>(&cfg_file_content).unwrap();
     println!("cfg: {cfg:?}");
+
+    for repo in cfg.repositories {
+        let prev_branch = String::from_utf8(
+            Command::new("git")
+                .args(["branch", "--show-current"])
+                .current_dir(&repo.dir)
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .unwrap();
+        let prev_branch_trimmed = prev_branch.trim();
+
+        dbg!(prev_branch_trimmed);
+
+        let g_co_status = Command::new("git")
+            .args(["checkout", &repo.branch])
+            .current_dir(&repo.dir)
+            .status()
+            .unwrap();
+        if !g_co_status.success() {
+            eprintln!(
+                "git checkout branch={} of dir={} failed: {}",
+                repo.branch,
+                repo.dir,
+                g_co_status.code().unwrap_or(-1),
+            );
+            continue;
+        }
+
+        let g_pl_status = Command::new("git")
+            .arg("pull")
+            .current_dir(&repo.dir)
+            .status()
+            .unwrap();
+        if !g_pl_status.success() {
+            eprintln!(
+                "git pull branch={} of dir={} failed: {}",
+                repo.branch,
+                repo.dir,
+                g_pl_status.code().unwrap_or(-1),
+            );
+            checkout_prev_branch(&repo, prev_branch_trimmed);
+            continue;
+        }
+        if repo.checkout_prev_branch {
+            checkout_prev_branch(&repo, prev_branch_trimmed);
+        }
+    }
+}
+
+fn checkout_prev_branch(repo: &RepositoryConfig, prev_branch: &str) {
+    let g_co_prev_br = Command::new("git")
+        .args(["checkout", prev_branch])
+        .current_dir(&repo.dir)
+        .status()
+        .unwrap();
+    if !g_co_prev_br.success() {
+        eprintln!(
+            "git checkout branch={} of dir={} failed: {}",
+            repo.branch,
+            repo.dir,
+            g_co_prev_br.code().unwrap_or(-1),
+        );
+    }
 }

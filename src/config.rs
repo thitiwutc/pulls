@@ -3,16 +3,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     #[serde(default = "default_num_threads")]
-    num_threads: u8,
-    repositories: Vec<RepositoryConfig>,
+    pub num_threads: u8,
+    pub repositories: Vec<RepositoryConfig>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RepositoryConfig {
-    dir: String,
-    branch: String,
+    pub dir: String,
+    pub branch: String,
     #[serde(default = "default_checkout_prev_branch")]
-    checkout_prev_branch: bool,
+    pub checkout_prev_branch: bool,
 }
 
 fn default_num_threads() -> u8 {
