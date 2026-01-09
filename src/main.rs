@@ -50,20 +50,23 @@ fn main() {
 
         dbg!(prev_branch_trimmed);
 
-        let g_co_status = Command::new("git")
-            .args(["checkout", &repo.target_branch])
-            .stdout(Stdio::null())
-            .current_dir(&repo.dir)
-            .status()
-            .unwrap();
-        if !g_co_status.success() {
-            eprintln!(
-                "git checkout branch={} of dir={} failed: {}",
-                repo.target_branch,
-                repo.dir,
-                g_co_status.code().unwrap_or(-1),
-            );
-            continue;
+        // Only checkout if we are not on the target branch already.
+        if prev_branch_trimmed != repo.target_branch {
+            let g_co_status = Command::new("git")
+                .args(["checkout", &repo.target_branch])
+                .stdout(Stdio::null())
+                .current_dir(&repo.dir)
+                .status()
+                .unwrap();
+            if !g_co_status.success() {
+                eprintln!(
+                    "git checkout branch={} of dir={} failed: {}",
+                    repo.target_branch,
+                    repo.dir,
+                    g_co_status.code().unwrap_or(-1),
+                );
+                continue;
+            }
         }
 
         let g_pl_status = Command::new("git")
