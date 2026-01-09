@@ -33,10 +33,9 @@ fn main() {
     let cfg_file_content = fs::read("./pulls.yaml").unwrap();
 
     let cfg = serde_yaml::from_slice::<config::Config>(&cfg_file_content).unwrap();
-    dbg!(&cfg);
 
     for repo in cfg.repositories {
-        dbg!(&repo);
+        println!("{}: git branch --show-current", &repo.dir);
         let prev_branch = String::from_utf8(
             Command::new("git")
                 .args(["branch", "--show-current"])
@@ -48,11 +47,9 @@ fn main() {
         .unwrap();
         let prev_branch_trimmed = prev_branch.trim();
 
-        dbg!(&prev_branch_trimmed);
-
         // Only checkout if we are not on the target branch already.
         if prev_branch_trimmed != repo.target_branch {
-            dbg!("git checkout");
+            println!("{}: git checkout", &repo.dir);
             let g_co_status = Command::new("git")
                 .args(["checkout", &repo.target_branch])
                 .stdout(Stdio::null())
@@ -70,7 +67,7 @@ fn main() {
             }
         }
 
-        dbg!("git pull");
+        println!("{}: git pull", &repo.dir);
         let g_pl_status = Command::new("git")
             .arg("pull")
             .stdout(Stdio::null())
