@@ -51,7 +51,7 @@ fn main() {
         dbg!(prev_branch_trimmed);
 
         let g_co_status = Command::new("git")
-            .args(["checkout", &repo.branch])
+            .args(["checkout", &repo.target_branch])
             .stdout(Stdio::null())
             .current_dir(&repo.dir)
             .status()
@@ -59,7 +59,7 @@ fn main() {
         if !g_co_status.success() {
             eprintln!(
                 "git checkout branch={} of dir={} failed: {}",
-                repo.branch,
+                repo.target_branch,
                 repo.dir,
                 g_co_status.code().unwrap_or(-1),
             );
@@ -75,14 +75,14 @@ fn main() {
         if !g_pl_status.success() {
             eprintln!(
                 "git pull branch={} of dir={} failed: {}",
-                repo.branch,
+                repo.target_branch,
                 repo.dir,
                 g_pl_status.code().unwrap_or(-1),
             );
             checkout_prev_branch(&repo, prev_branch_trimmed);
             continue;
         }
-        if repo.checkout_prev_branch {
+        if !repo.stay_in_target_branch {
             checkout_prev_branch(&repo, prev_branch_trimmed);
         }
 
@@ -100,7 +100,7 @@ fn checkout_prev_branch(repo: &RepositoryConfig, prev_branch: &str) {
     if !g_co_prev_br.success() {
         eprintln!(
             "git checkout branch={} of dir={} failed: {}",
-            repo.branch,
+            repo.target_branch,
             repo.dir,
             g_co_prev_br.code().unwrap_or(-1),
         );

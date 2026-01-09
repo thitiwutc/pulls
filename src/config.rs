@@ -10,9 +10,9 @@ pub struct Config {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RepositoryConfig {
     pub dir: String,
-    pub branch: String,
+    pub target_branch: String,
     #[serde(default = "default_checkout_prev_branch")]
-    pub checkout_prev_branch: bool,
+    pub stay_in_target_branch: bool,
 }
 
 fn default_num_threads() -> u8 {
@@ -20,7 +20,7 @@ fn default_num_threads() -> u8 {
 }
 
 fn default_checkout_prev_branch() -> bool {
-    true
+    false
 }
 
 impl Config {
@@ -30,8 +30,8 @@ impl Config {
             num_threads: 4,
             repositories: vec![RepositoryConfig {
                 dir: String::from("path-to-my-repo"),
-                branch: String::from("main"),
-                checkout_prev_branch: true,
+                target_branch: String::from("main"),
+                stay_in_target_branch: false,
             }],
         }
     }
