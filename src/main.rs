@@ -40,7 +40,6 @@ fn main() {
             Command::new("git")
                 .args(["branch", "--show-current"])
                 .current_dir(&repo.dir)
-                .stdout(Stdio::null())
                 .output()
                 .unwrap()
                 .stdout,
