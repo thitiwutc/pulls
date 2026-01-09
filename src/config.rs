@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     #[serde(default = "default_num_threads")]
-    pub num_threads: u8,
+    pub num_threads: usize,
     pub repositories: Vec<RepositoryConfig>,
 }
 
@@ -16,7 +16,7 @@ pub struct RepositoryConfig {
     pub stay_in_target_branch: bool,
 }
 
-fn default_num_threads() -> u8 {
+fn default_num_threads() -> usize {
     4
 }
 

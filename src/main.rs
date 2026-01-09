@@ -2,13 +2,18 @@ use std::{
     fs,
     io::stdout,
     process::{Command, Stdio},
+    sync::{Arc, mpsc::sync_channel},
+    thread,
 };
 
 use clap::Parser;
 
-use crate::config::{Config, RepositoryConfig};
-
 mod config;
+mod semaphore;
+use crate::{
+    config::{Config, RepositoryConfig},
+    semaphore::Semaphore,
+};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -33,62 +38,73 @@ fn main() {
     let cfg_file_content = fs::read("./pulls.yaml").unwrap();
 
     let cfg = serde_yaml::from_slice::<config::Config>(&cfg_file_content).unwrap();
+    let sem = Arc::new(Semaphore::new(cfg.num_threads));
+    let mut handles = vec![];
 
     for repo in cfg.repositories {
-        println!("{}: git branch --show-current", &repo.dir);
-        let prev_branch = String::from_utf8(
-            Command::new("git")
-                .args(["branch", "--show-current"])
-                .current_dir(&repo.dir)
-                .output()
-                .unwrap()
-                .stdout,
-        )
-        .unwrap();
-        let prev_branch_trimmed = prev_branch.trim();
+        let sem = Arc::clone(&sem);
 
-        // Only checkout if we are not on the target branch already.
-        if prev_branch_trimmed != repo.target_branch {
-            println!("{}: git checkout", &repo.dir);
-            let g_co_status = Command::new("git")
-                .args(["checkout", &repo.target_branch])
+        handles.push(thread::spawn(move || {
+            sem.acquire();
+
+            println!("{}: git branch --show-current", &repo.dir);
+            let prev_branch = String::from_utf8(
+                Command::new("git")
+                    .args(["branch", "--show-current"])
+                    .current_dir(&repo.dir)
+                    .output()
+                    .unwrap()
+                    .stdout,
+            )
+            .unwrap();
+            let prev_branch_trimmed = prev_branch.trim();
+
+            // Only checkout if we are not on the target branch already.
+            if prev_branch_trimmed != repo.target_branch {
+                println!("{}: git checkout", &repo.dir);
+                let g_co_status = Command::new("git")
+                    .args(["checkout", &repo.target_branch])
+                    .stdout(Stdio::null())
+                    .current_dir(&repo.dir)
+                    .status()
+                    .unwrap();
+                if !g_co_status.success() {
+                    eprintln!(
+                        "git checkout branch={} of dir={} failed: {}",
+                        repo.target_branch,
+                        repo.dir,
+                        g_co_status.code().unwrap_or(-1),
+                    );
+                }
+            }
+
+            println!("{}: git pull", &repo.dir);
+            let g_pl_status = Command::new("git")
+                .arg("pull")
                 .stdout(Stdio::null())
                 .current_dir(&repo.dir)
                 .status()
                 .unwrap();
-            if !g_co_status.success() {
+            if !g_pl_status.success() {
                 eprintln!(
-                    "git checkout branch={} of dir={} failed: {}",
+                    "git pull branch={} of dir={} failed: {}",
                     repo.target_branch,
                     repo.dir,
-                    g_co_status.code().unwrap_or(-1),
+                    g_pl_status.code().unwrap_or(-1),
                 );
-                continue;
+                checkout_prev_branch(&repo, prev_branch_trimmed);
             }
-        }
+            if !repo.stay_in_target_branch {
+                checkout_prev_branch(&repo, prev_branch_trimmed);
+            }
 
-        println!("{}: git pull", &repo.dir);
-        let g_pl_status = Command::new("git")
-            .arg("pull")
-            .stdout(Stdio::null())
-            .current_dir(&repo.dir)
-            .status()
-            .unwrap();
-        if !g_pl_status.success() {
-            eprintln!(
-                "git pull branch={} of dir={} failed: {}",
-                repo.target_branch,
-                repo.dir,
-                g_pl_status.code().unwrap_or(-1),
-            );
-            checkout_prev_branch(&repo, prev_branch_trimmed);
-            continue;
-        }
-        if !repo.stay_in_target_branch {
-            checkout_prev_branch(&repo, prev_branch_trimmed);
-        }
+            println!("{} ✅", repo.dir);
+            sem.release();
+        }));
+    }
 
-        println!("{} ✅", repo.dir);
+    for h in handles {
+        h.join().unwrap();
     }
 }
 
