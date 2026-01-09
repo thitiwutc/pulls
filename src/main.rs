@@ -40,6 +40,7 @@ fn main() {
             Command::new("git")
                 .args(["branch", "--show-current"])
                 .current_dir(&repo.dir)
+                .stdout(Stdio::null())
                 .output()
                 .unwrap()
                 .stdout,
@@ -84,12 +85,15 @@ fn main() {
         if repo.checkout_prev_branch {
             checkout_prev_branch(&repo, prev_branch_trimmed);
         }
+
+        println!("{}", repo.dir);
     }
 }
 
 fn checkout_prev_branch(repo: &RepositoryConfig, prev_branch: &str) {
     let g_co_prev_br = Command::new("git")
         .args(["checkout", prev_branch])
+        .stdout(Stdio::null())
         .current_dir(&repo.dir)
         .status()
         .unwrap();
