@@ -21,7 +21,7 @@ fn default_num_threads() -> u8 {
 }
 
 fn default_target_branch() -> String {
-    String::from("w")
+    String::from("main")
 }
 
 fn default_stay_in_target_branch() -> bool {
