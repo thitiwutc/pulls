@@ -75,6 +75,7 @@ fn main() {
                         repo.dir,
                         g_co_status.code().unwrap_or(-1),
                     );
+                    println!("{} ❌", &repo.dir);
                 }
             }
 
@@ -92,6 +93,7 @@ fn main() {
                     repo.dir,
                     g_pl_status.code().unwrap_or(-1),
                 );
+                println!("{} ❌", &repo.dir);
                 checkout_prev_branch(&repo, prev_branch_trimmed);
             }
             if !repo.stay_in_target_branch {
@@ -127,5 +129,6 @@ fn checkout_prev_branch(repo: &RepositoryConfig, prev_branch: &str) {
             repo.dir,
             g_co_prev_br.code().unwrap_or(-1),
         );
+        println!("{} ❌", &repo.dir);
     }
 }
