@@ -36,6 +36,7 @@ fn main() {
     dbg!(&cfg);
 
     for repo in cfg.repositories {
+        dbg!(&repo);
         let prev_branch = String::from_utf8(
             Command::new("git")
                 .args(["branch", "--show-current"])
@@ -47,10 +48,11 @@ fn main() {
         .unwrap();
         let prev_branch_trimmed = prev_branch.trim();
 
-        dbg!(prev_branch_trimmed);
+        dbg!(&prev_branch_trimmed);
 
         // Only checkout if we are not on the target branch already.
         if prev_branch_trimmed != repo.target_branch {
+            dbg!("git checkout");
             let g_co_status = Command::new("git")
                 .args(["checkout", &repo.target_branch])
                 .stdout(Stdio::null())
@@ -68,6 +70,7 @@ fn main() {
             }
         }
 
+        dbg!("git pull");
         let g_pl_status = Command::new("git")
             .arg("pull")
             .stdout(Stdio::null())
