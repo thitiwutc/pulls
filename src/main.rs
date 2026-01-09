@@ -91,6 +91,11 @@ fn main() {
 }
 
 fn checkout_prev_branch(repo: &RepositoryConfig, prev_branch: &str) {
+    // Don't checkout again if we already in the prev_branch.
+    if repo.target_branch == prev_branch {
+        return;
+    }
+
     let g_co_prev_br = Command::new("git")
         .args(["checkout", prev_branch])
         .stdout(Stdio::null())
