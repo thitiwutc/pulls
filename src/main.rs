@@ -88,7 +88,7 @@ fn main() {
             checkout_prev_branch(&repo, prev_branch_trimmed);
         }
 
-        println!("{}", repo.dir);
+        println!("{} ✅", repo.dir);
     }
 }
 
