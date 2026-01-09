@@ -1,5 +1,0 @@
-num_threads: 4
-repositories:
-- dir: path-to-my-repo
-  target_branch: main
-  stay_in_target_branch: false
