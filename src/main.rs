@@ -2,7 +2,7 @@ use std::{
     fs,
     io::stdout,
     process::{Command, Stdio},
-    sync::{Arc, mpsc::sync_channel},
+    sync::Arc,
     thread,
 };
 
