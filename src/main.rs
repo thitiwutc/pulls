@@ -33,7 +33,7 @@ fn main() {
     let cfg_file_content = fs::read("./pulls.yaml").unwrap();
 
     let cfg = serde_yaml::from_slice::<config::Config>(&cfg_file_content).unwrap();
-    println!("cfg: {cfg:?}");
+    dbg!(&cfg);
 
     for repo in cfg.repositories {
         let prev_branch = String::from_utf8(
